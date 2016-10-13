@@ -11,12 +11,19 @@ import (
 
 func main() {
 	uri := flag.String("url", "fastcgi://172.16.22.101/tmp/a.php", "url to request")
+	e := flag.String("env", "a=A&b=B", "enviroment")
+
 	flag.Parse()
 
 	u, err := url.Parse(*uri)
 	if err != nil {
 		panic(err)
 	}
+	env := make(map[string]string)
+	if err != nil {
+		panic(err)
+	}
+
 	arr := strings.Split(u.Host, ":")
 	host := arr[0]
 	var port int = 9000
@@ -27,13 +34,16 @@ func main() {
 		}
 		port = int(_port)
 	}
-	env := make(map[string]string)
+	mapEnv,err  := url.ParseQuery(*e)
 	env["REQUEST_METHOD"] = "GET"
 	env["SCRIPT_FILENAME"] = u.Path
 	env["SERVER_SOFTWARE"] = "go / fcgiclient "
 	env["REMOTE_ADDR"] = "127.0.0.1"
 	env["SERVER_PROTOCOL"] = "HTTP/1.1"
 	env["QUERY_STRING"] = u.RawQuery
+	for k,v := range mapEnv {
+		env[k] = v[0]
+	}
 	fcgi, err := fcgiclient.New(host, port)
 	if err != nil {
 		panic(err)
